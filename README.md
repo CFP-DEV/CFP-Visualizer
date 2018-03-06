@@ -17,7 +17,7 @@ let options = {
 		backgroundColor: '#0f0d25',
 	},
 	
-  /*
+  	/*
 	ID - string, required, default: null
 	autoplay - boolean, default: true
 	*/
@@ -26,12 +26,12 @@ let options = {
 		autoplay: false,
 	},
   
-  /*
+  	/*
 	type - string, default: 'basic'. Use: 'basic', 'circular'.
-  style - string, default: 'solid'. Use: 'solid', 'rounded', 'dashed', 'dashed-circular'.
+  	style - string, default: 'solid'. Use: 'solid', 'rounded', 'dashed', 'dashed-circular'.
 	color - string, default: '#000000'.
-  width - integer, default: auto
-  radius: integer, default: 150
+  	width - integer, default: auto
+  	radius: integer, default: 150
 	*/
 	bars: {
 		type: 'circular',
@@ -41,7 +41,7 @@ let options = {
 		radius: 250,
 	},
   
-  /*
+  	/*
 	FFT_SIZE: integer, default: 2048. Use 512, 1024, 2048.
 	*/
 	FFT_SIZE: 2048,
