@@ -1,2 +1,2 @@
 # CFP-Visualizer
-Simple music visualizer. Made with canvas and web audio api.
+Learning JS, Web Audio API by creating this music visualizer. Work in progress.

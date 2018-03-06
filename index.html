@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8"/>
+	<title>Stream Pack</title>
+	<link href="https://fonts.googleapis.com/css?family=Lato:300,400" rel="stylesheet"> 
+	<link rel="stylesheet" href="style.css">
+
+	<!-- JS -->
+	<script src="cfp-visualizer.js"></script>
+</head>
+<body>
+
+<div class="scene-audio">
+	<audio id="audio" class="scene-audio__audio" src="music/down.mp3" preload="meta"></audio>
+	<canvas id="visualizer" class="scene-audio__visualizer"></canvas>
+</div>
+
+<script>
+
+// Visualizer
+let options = {
+	canvas: {
+		ID: 'visualizer',
+		backgroundColor: '#0f0d25',
+	},
+	audio: {
+		ID: 'audio',
+		autoplay: false,
+	},
+	bars: {
+		type: 'circular',
+		style: 'dashed',
+		color: '#ee1848',
+		width: 3,
+		radius: 250,
+	},
+	FFT_SIZE: 2048,
+}
+
+const Visualizer = new CFPVisualizer(options);
+
+Visualizer.init();
+
+</script>
+
+
+</body>
+</html>
