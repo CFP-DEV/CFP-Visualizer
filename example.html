@@ -23,11 +23,13 @@
 				<i class="fas fa-stop"></i>
 			</button>
 			<div class="audio-info">
-				<div class="audio-info__title">
+				<div class="audio-info__title" id="audio-title">
 					Marian Hill - Down
 				</div>
 				<div class="audio-info__time">
-					0:30 / 2:49
+					<span id="audio-current">0:00</span> 
+					/
+					<span id="audio-duration">0:00</span>
 				</div>
 			</div>
 			<button class="audio-play" id="play">
@@ -36,7 +38,9 @@
 		</div>
 	</div>
 
-	<audio id="audio" src="music/down.mp3"></audio>
+	<audio id="audio">
+		<source src="music/down.mp3" type="audio/mpeg">
+	</audio>
 
 	<!-- JS -->	
 	<script src="./cfp-visualizer.js"></script>
@@ -51,6 +55,9 @@
 			audio: {
 				ID: 'audio',
 				autoplay: false,
+				currentID: 'audio-current',
+				durationID: 'audio-duration',
+				nameID: 'audio-title',
 			},
 			bars: {
 				type: 'basic',
@@ -72,6 +79,8 @@
 
 		playBTN.addEventListener('click', () => { Visualizer.audioPlay(); }, false);
 		stopBTN.addEventListener('click', () => { Visualizer.audioStop(); }, false);
+
+
 	</script>
 </body>
 </html>

@@ -7,8 +7,11 @@ class CFPVisualizer {
 		}
 
 		this._audio = {
-			ID:       options.audio.ID       || null,
-			autoplay: options.audio.autoplay,
+			ID:         options.audio.ID         || null,
+			autoplay:   options.audio.autoplay,
+			currentID:  options.audio.currentID  || null,
+			durationID: options.audio.durationID || null,
+			nameID:     options.audio.nameID     || null,
 		}
 
 		this._bars = {
@@ -36,6 +39,7 @@ class CFPVisualizer {
 		this.audioPlay = this.audioPlay.bind(this);
 		this.audioPause = this.audioPause.bind(this);
 		this.audioStop = this.audioStop.bind(this);
+		this.audioInfo = this.audioInfo.bind(this);
 	}
 
 	init () {
@@ -56,6 +60,7 @@ class CFPVisualizer {
 		}
 
 		window.addEventListener('resize', this.onWindowResize, false);
+		this.audio.ontimeupdate = () => { this.audioInfo(); }
 
 		this.calculate();
 
@@ -204,7 +209,21 @@ class CFPVisualizer {
 	}
 
 	audioInfo () {
+		if (this._audio.currentID) {
+			let current = this.audio.currentTime;
+			let seconds = Math.trunc(current % 60);
+			document.getElementById(this._audio.currentID).innerHTML = `${Math.trunc(current / 60)}:${seconds < 10 ? '0' + seconds : seconds}`;
+		}
 
+		if (this._audio.durationID) {
+			let duration = this.audio.duration;
+			let seconds = Math.trunc(duration % 60);
+			document.getElementById(this._audio.durationID).innerHTML = `${Math.trunc(duration / 60)}:${seconds < 10 ? '0' + seconds : seconds}`;
+		}
+
+		if (this._audio.nameID) {
+			//document.getElementById(this._audio.nameID).innerHTML = ;
+		}
 	}
 
 	rectangle(x, y, width, height, fillColor) {
