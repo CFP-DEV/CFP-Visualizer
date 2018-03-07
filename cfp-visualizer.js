@@ -42,14 +42,16 @@ class CFPVisualizer {
 		this.audioInfo = this.audioInfo.bind(this);
 	}
 
+	/**
+	 * @description
+	 * Core function. It will initialize all visualizer elements and provide
+	 * error if there are no enough required data.
+	 * It assigns event listener 'resize' to the window which trigger onWindowResize().
+	 * It also triggers audioInfo() when audio element currentTime is changing.
+	 */
 	init () {
 		if (!this._canvas.ID || !this._audio.ID || !this._canvas.containerID)
 			throw '[CFP-Visualizer] You didn\' t provide canvasID, audioID or containerID.';	
-
-		/*
-		if (this._FFT_SIZE % 512 !== 0 || this._FFT_SIZE > 2048)
-			throw '[CFP-Visualizer] Wrong FFT_SIZE. Allowed values: 512, 1024, 2048.';
-		*/
 		
 		this.initCanvas();
 
@@ -67,6 +69,11 @@ class CFPVisualizer {
 		this.updateVisualizer();
 	}
 
+	/**
+	 * @description
+	 * Assign canvas element from the wbesite to the variable.
+	 * Set initial height & width of the canvas and also create ctx.
+	 */
 	initCanvas () {
 		// Canvas Container
 		this.canvasContainer = document.getElementById(this._canvas.containerID);
@@ -79,6 +86,10 @@ class CFPVisualizer {
 		this.canvas.width  = this.canvasContainer.clientWidth;
 	}
 
+	/**
+	 * @description
+	 * Assign audio element from the wbesite to the variable and then extract data from it.
+	 */
 	initAudio () {
 		this.audio = document.getElementById(this._audio.ID);
 		let context = new AudioContext();
@@ -93,6 +104,11 @@ class CFPVisualizer {
     	this.dataArray = new Uint8Array(this.bufferLength);
 	}
 
+	/**
+	 * @description
+	 * Change canvas width & height to match container every time window size is changing.
+	 * It also triggers calculate function.
+	 */
 	onWindowResize () {
 		// Resize
 		this.canvas.width  =this.canvasContainer.clientWidth;
@@ -102,6 +118,10 @@ class CFPVisualizer {
 		this.calculate();
 	}
 
+	/**
+	 * @description
+	 * Update visualizer. This function is looped with requestAnimationFrame.
+	 */
 	updateVisualizer () {
 		// Draw Bars
 		this.drawBars();
@@ -113,6 +133,10 @@ class CFPVisualizer {
 		requestAnimationFrame(this.updateVisualizer);
 	}
 
+	/**
+	 * @description
+	 * Calculate barWidth and barHeight / radius multipliers.
+	 */
 	calculate () {
 		// Breakpoints
 		if (this._breakpoints) {
@@ -143,10 +167,24 @@ class CFPVisualizer {
 		}
 	}
 
+	/**
+	 * @description
+	 * Calculate circle circumference with given radius.
+	 * 
+	 * @return number
+	 */
 	calculateCircumference(radius) {
 		return radius * 2 * Math.PI;
 	}
 
+	/**
+	 * @description
+	 * Draw bars based on type and style.
+	 * Available types: basic, circular.
+	 * Available styles (works for each type): solid, rounded, dashed.
+	 * Default it's drawing from the bottom to top but it can be changed by
+	 * editing this._bars.reverse variable.
+	 */
 	drawBars () {
 		// Clear
 		this.rectangle(0, 0, this.canvas.width, this.canvas.height, this._canvas.backgroundColor);
@@ -156,14 +194,36 @@ class CFPVisualizer {
 
 			for (let i = 0; i < this.bufferLength; i++) {
 				let barHeight = this.dataArray[i] / 2;
+				let y = this._bars.reverse ? 0 : this.canvas.height - barHeight;
 
-				for (let j = 0; j < barHeight; j += this.barWidth / 2 + this._bars.spacing) {
-					this.rectangle(x, this.canvas.height - j, this.barWidth, this.barWidth / 2, this._bars.color);	
+				if (this._bars.style === 'solid') {
+					this.rectangle(x, y, this.barWidth, barHeight, this._bars.color);
 				}
+
+				if (this._bars.style === 'rounded') {
+					this.roundedRectangle(x, 
+						 				  y, 
+										  this.barWidth, 
+										  barHeight, 
+										  this._bars.color,
+										  this._bars.reverse ? 0 : this.barWidth / 2,
+							              this._bars.reverse ? 0 : this.barWidth / 2,
+							              this._bars.reverse ? this.barWidth / 2 : 0,
+							              this._bars.reverse ? this.barWidth / 2 : 0);
+				}
+
+				if (this._bars.style === 'dashed') {
+					for (let j = 0; j < barHeight; j += this.barWidth / 2 + this._bars.spacing) {
+						y = this._bars.reverse ? j : this.canvas.height - j;
+
+						this.rectangle(x, y, this.barWidth, this.barWidth / 2, this._bars.color);		
+					}	
+				}
+				
 				
 				x += this.barWidth + this._bars.spacing;
 			}
-		} else {
+		} else if (this._bars.type === 'circular') {
 			let radius = this._bars.radius * this.radiusMultiplier;
 
 			// Maximum Bars
@@ -182,8 +242,18 @@ class CFPVisualizer {
 				this.ctx.translate(this.canvas.width / 2 + this._bars.spacing, this.canvas.height / 2 + this._bars.spacing);
 				this.ctx.rotate(alfa - beta);
 
-				for (let j = 0; j < barHeight; j += this.barWidth + this._bars.spacing / 2) {
-					this.rectangle(0, radius + j, this.barWidth, this.barWidth, this._bars.color);
+				if (this._bars.style === 'solid') {
+					this.rectangle(0, radius, this.barWidth, barHeight, this._bars.color);
+				}
+
+				if (this._bars.style === 'rounded') {
+					this.roundedRectangle(0, radius, this.barWidth, barHeight, this._bars.color, 0, 0, this.barWidth / 2, this.barWidth / 2);
+				}
+
+				if (this._bars.style === 'dashed') {
+					for (let j = 0; j < barHeight; j += this.barWidth + this._bars.spacing) {
+						this.rectangle(0, radius + j, this.barWidth, this.barWidth, this._bars.color);
+					}	
 				}
 
 				this.rectangle(0, radius, this.barWidth, 2, this._bars.color);	
@@ -192,22 +262,36 @@ class CFPVisualizer {
 		}
 	}
 
+	/**
+	 * @description
+	 * Play Audio.
+	 */
 	audioPlay () {
 		this.audio.play();
-		this.isPlaying = true;
 	}
 
+	/**
+	 * @description
+	 * Pause Audio.
+	 */
 	audioPause () {
 		this.audio.pause();
-		this.isPlaying = false;
 	}
 
+	/**
+	 * @description
+	 * Stop Audio and reset it's time.
+	 */
 	audioStop () {
 		this.audio.pause();
 		this.isPlaying = false;
-		this.audio.currentTime = 0;
 	}
 
+	/**
+	 * @description
+	 * Update currentTime, duration on the website. 
+	 * It's also designed to update song name but this feature is currently disabled.
+	 */
 	audioInfo () {
 		if (this._audio.currentID) {
 			let current = this.audio.currentTime;
@@ -226,8 +310,55 @@ class CFPVisualizer {
 		}
 	}
 
+	/**
+	 * @description
+	 * Draw rectangle.
+	 *
+	 * @param {number} x
+	 * @param {number} y
+     * @param {number} width
+	 * @param {number} height
+	 * @param {string} fillColor
+	 */
 	rectangle(x, y, width, height, fillColor) {
 		this.ctx.fillStyle = fillColor;
 		this.ctx.fillRect(x, y, width, height);
+	}
+
+	/**
+	 * @description
+	 * Draw rounded rectangle.
+	 *
+	 * @param {number} x
+	 * @param {number} y
+     * @param {number} width
+	 * @param {number} height
+	 * @param {string} fillColor
+	 * @param {number} topLeft
+	 * @param {number} topRight
+	 * @param {number} bottomLeft
+	 * @param {number} bottomRight
+	 */
+	roundedRectangle(x, y, width, height, fillColor, topLeft, topRight, bottomLeft, bottomRight) {
+		if (height !== 0) {
+			this.ctx.fillStyle = fillColor;
+			this.ctx.beginPath();
+
+		    this.ctx.moveTo(x + topLeft, y);
+		    this.ctx.lineTo(x + width - topRight, y);
+		    this.ctx.quadraticCurveTo(x + width, y, x + width, y + topRight);
+
+		    this.ctx.lineTo(x + width, y + height - bottomRight);
+		    this.ctx.quadraticCurveTo(x + width, y + height, x + width - bottomRight, y + height);
+
+		    this.ctx.lineTo(x + bottomLeft, y + height);
+		    this.ctx.quadraticCurveTo(x, y + height, x, y + height - bottomLeft);
+
+		    this.ctx.lineTo(x, y + topLeft);
+		    this.ctx.quadraticCurveTo(x, y, x + topLeft, y);
+
+		    this.ctx.closePath();
+		   	this.ctx.fill();	
+		}
 	}
 }
