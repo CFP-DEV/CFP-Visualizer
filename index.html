@@ -12,7 +12,7 @@
 <body>
 
 <div class="scene-audio">
-	<audio id="audio" class="scene-audio__audio" src="music/down.mp3" preload="meta"></audio>
+	<audio id="audio" class="scene-audio__audio" src="music/audio.mp3"></audio>
 	<canvas id="visualizer" class="scene-audio__visualizer"></canvas>
 </div>
 
@@ -32,10 +32,18 @@ let options = {
 		type: 'circular',
 		style: 'dashed',
 		color: '#ee1848',
-		width: 3,
-		radius: 250,
+		//width: 3,
+		radius: 300,
+		spacing: 2,
 	},
-	FFT_SIZE: 2048,
+	breakpoints: [
+		{
+			width: 1200,
+			barHeightMultiplier: 0.5,
+			radiusMultiplier: 0.5,
+		},
+	],
+	FFT_SIZE: 512,
 }
 
 const Visualizer = new CFPVisualizer(options);
