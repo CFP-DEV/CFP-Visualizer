@@ -2,14 +2,13 @@ class CFPVisualizer {
 	constructor(options) {
 		this._canvas = {
 			ID:              options.canvas.ID              || null,
-			//height:          options.canvas.height          || window.innerHeight,
-			//width:           options.canvas.width           || window.innerWidth,
+			containerID:     options.canvas.containerID     || null,
 			backgroundColor: options.canvas.backgroundColor || '#000000',
 		}
 
 		this._audio = {
 			ID:       options.audio.ID       || null,
-			autoplay: options.audio.autoplay || true,
+			autoplay: options.audio.autoplay,
 		}
 
 		this._bars = {
@@ -29,22 +28,32 @@ class CFPVisualizer {
 		// Other
 		this.barHeightMultiplier = 1;
 		this.radiusMultiplier = 1;
+		this.isPlaying = false;
 
 		// Bind
 		this.updateVisualizer = this.updateVisualizer.bind(this);
 		this.onWindowResize = this.onWindowResize.bind(this);
+		this.audioPlay = this.audioPlay.bind(this);
+		this.audioPause = this.audioPause.bind(this);
+		this.audioStop = this.audioStop.bind(this);
 	}
 
 	init () {
-		if (!this._canvas.ID || !this._audio.ID)
-			throw '[CFP-Visualizer] You didn\' t provide canvasID or audioID.';	
+		if (!this._canvas.ID || !this._audio.ID || !this._canvas.containerID)
+			throw '[CFP-Visualizer] You didn\' t provide canvasID, audioID or containerID.';	
 
+		/*
 		if (this._FFT_SIZE % 512 !== 0 || this._FFT_SIZE > 2048)
 			throw '[CFP-Visualizer] Wrong FFT_SIZE. Allowed values: 512, 1024, 2048.';
+		*/
 		
 		this.initCanvas();
 
 		this.initAudio();
+
+		if (this._audio.autoplay) {
+			this.audioPlay();
+		}
 
 		window.addEventListener('resize', this.onWindowResize, false);
 
@@ -54,15 +63,15 @@ class CFPVisualizer {
 	}
 
 	initCanvas () {
+		// Canvas Container
+		this.canvasContainer = document.getElementById(this._canvas.containerID);
 		// Canvas Setup
 		this.canvas = document.getElementById(this._canvas.ID);
 		this.ctx = this.canvas.getContext('2d');
 
 		// Canvas Height & Width
-		this.ctx.canvas.height = window.innerHeight;
-		this.ctx.canvas.width  = window.innerWidth;
-
-		// Canvas Background
+		this.canvas.height = this.canvasContainer.clientHeight;
+		this.canvas.width  = this.canvasContainer.clientWidth;
 	}
 
 	initAudio () {
@@ -81,12 +90,10 @@ class CFPVisualizer {
 
 	onWindowResize () {
 		// Resize
-		this.ctx.canvas.width  = window.innerWidth;
-		this.ctx.canvas.height = window.innerHeight;
+		this.canvas.width  =this.canvasContainer.clientWidth;
+		this.canvas.height = this.canvasContainer.clientHeight;
 
-		// Canvas Background
-
-		// Recalculate Bars Width / Height
+		// Recalculate
 		this.calculate();
 	}
 
@@ -121,8 +128,11 @@ class CFPVisualizer {
 
 		// Bar Width
 		if (this._bars.width === 'auto') {
-			// this.barWidth = this.canvas.width / this.bufferLength;
-			this.barWidth = this.calculateCircumference(this._bars.radius * this.radiusMultiplier) / this.bufferLength;
+			if (this._bars.type === 'basic') {
+				this.barWidth = (this.canvas.width - (this.bufferLength - 1) * this._bars.spacing) / this.bufferLength;	
+			} else {
+				this.barWidth = this.calculateCircumference(this._bars.radius * this.radiusMultiplier) / this.bufferLength;
+			}
 		} else {
 			this.barWidth = this._bars.width;
 		}
@@ -134,50 +144,71 @@ class CFPVisualizer {
 
 	drawBars () {
 		// Clear
-		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		this.rectangle(0, 0, this.canvas.width, this.canvas.height, this._canvas.backgroundColor);
 
-		let radius = this._bars.radius * this.radiusMultiplier;
+		if (this._bars.type === 'basic') {
+			let x = 0;
 
-		// Maximum Bars
-		let barNum = Math.floor(this.calculateCircumference(radius) / (this.barWidth + this._bars.spacing));
-		let freqJump = Math.floor(this.bufferLength / barNum);
-		let x = 0;
+			for (let i = 0; i < this.bufferLength; i++) {
+				let barHeight = this.dataArray[i] / 2;
 
-		// Draw 
-		for (let i = 0; i < barNum; i++) {
-			//barHeight = this.dataArray[i * freqJump];
-			let barHeight = Math.max(0, this.dataArray[i] - this.floorLevel) * this.barHeightMultiplier;
-			let alfa = (i * 2 * Math.PI) / barNum;
-			let beta = (3 * 45 - this.barWidth) * Math.PI / 180;
-
-			this.ctx.save();
-			this.ctx.translate(this.canvas.width / 2 + this._bars.spacing, this.canvas.height / 2 + this._bars.spacing);
-			this.ctx.rotate(alfa - beta);
-
-			for (let j = 0; j < barHeight; j += this.barWidth + this._bars.spacing / 2) {
-				this.rectangle(0, radius + j, this.barWidth, this.barWidth, this._bars.color);
+				for (let j = 0; j < barHeight; j += this.barWidth / 2 + this._bars.spacing) {
+					this.rectangle(x, this.canvas.height - j, this.barWidth, this.barWidth / 2, this._bars.color);	
+				}
+				
+				x += this.barWidth + this._bars.spacing;
 			}
+		} else {
+			let radius = this._bars.radius * this.radiusMultiplier;
 
-			this.rectangle(0, radius, this.barWidth, 2, this._bars.color);	
-			this.ctx.restore();
+			// Maximum Bars
+			let barNum = Math.floor(this.calculateCircumference(radius) / (this.barWidth + this._bars.spacing));
+			let freqJump = Math.floor(this.bufferLength / barNum);
+			let x = 0;
+
+			// Draw 
+			for (let i = 0; i < barNum; i++) {
+				//barHeight = this.dataArray[i * freqJump];
+				let barHeight = Math.max(0, this.dataArray[i] - this.floorLevel) * this.barHeightMultiplier;
+				let alfa = (i * 2 * Math.PI) / barNum;
+				let beta = (3 * 45 - this.barWidth) * Math.PI / 180;
+
+				this.ctx.save();
+				this.ctx.translate(this.canvas.width / 2 + this._bars.spacing, this.canvas.height / 2 + this._bars.spacing);
+				this.ctx.rotate(alfa - beta);
+
+				for (let j = 0; j < barHeight; j += this.barWidth + this._bars.spacing / 2) {
+					this.rectangle(0, radius + j, this.barWidth, this.barWidth, this._bars.color);
+				}
+
+				this.rectangle(0, radius, this.barWidth, 2, this._bars.color);	
+				this.ctx.restore();
+			}
 		}
 	}
 
 	audioPlay () {
 		this.audio.play();
+		this.isPlaying = true;
 	}
 
 	audioPause () {
 		this.audio.pause();
+		this.isPlaying = false;
 	}
 
 	audioStop () {
 		this.audio.pause();
+		this.isPlaying = false;
 		this.audio.currentTime = 0;
 	}
 
+	audioInfo () {
+
+	}
+
 	rectangle(x, y, width, height, fillColor) {
-		this.ctx.fillstyle = fillColor;
+		this.ctx.fillStyle = fillColor;
 		this.ctx.fillRect(x, y, width, height);
 	}
 }

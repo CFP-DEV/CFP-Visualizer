@@ -21,3 +21,21 @@ html, body {
 	}
 }
 
+#play, #pause, #stop {
+	position: fixed;
+	left: 20px;
+	z-index: 20;
+}
+
+#play {
+	top: 20px;
+}
+
+#pause {
+	top: 40px;
+}
+
+#stop {
+	top: 60px;
+}
+

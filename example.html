@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<!-- Global -->
+	<meta charset="UTF-8">
+	<title>CFP-Visualizer</title>
+
+	<!-- Fonts -->
+	<link href="https://fonts.googleapis.com/css?family=Lato:300,400" rel="stylesheet"> 
+	<link href="https://use.fontawesome.com/releases/v5.0.8/css/all.css" rel="stylesheet">
+	
+	<!-- CSS -->
+	<link rel="stylesheet" href="example.css">
+</head>
+<body>
+
+	<div class="player">
+		<div class="player__visualizer" id="player-visualizer">
+			<canvas id="visualizer"></canvas>
+		</div>
+		<div class="player__control">
+			<button class="audio-stop" id="stop">
+				<i class="fas fa-stop"></i>
+			</button>
+			<div class="audio-info">
+				<div class="audio-info__title">
+					Marian Hill - Down
+				</div>
+				<div class="audio-info__time">
+					0:30 / 2:49
+				</div>
+			</div>
+			<button class="audio-play" id="play">
+				<i class="fas fa-play"></i>
+			</button>
+		</div>
+	</div>
+
+	<audio id="audio" src="music/down.mp3"></audio>
+
+	<!-- JS -->	
+	<script src="./cfp-visualizer.js"></script>
+	<script>
+		// Visualizer
+		let options = {
+			canvas: {
+				ID: 'visualizer',
+				containerID: 'player-visualizer',
+				backgroundColor: '#070611',
+			},
+			audio: {
+				ID: 'audio',
+				autoplay: false,
+			},
+			bars: {
+				type: 'basic',
+				style: 'dashed',
+				color: '#ee1848',
+				spacing: 2,
+			},
+			FFT_SIZE: 256,
+			floorLevel: 0,
+		}
+
+		const Visualizer = new CFPVisualizer(options);
+
+		Visualizer.init();
+
+		// Controls
+		let playBTN = document.getElementById('play');
+		let stopBTN = document.getElementById('stop');
+
+		playBTN.addEventListener('click', () => { Visualizer.audioPlay(); }, false);
+		stopBTN.addEventListener('click', () => { Visualizer.audioStop(); }, false);
+	</script>
+</body>
+</html>
